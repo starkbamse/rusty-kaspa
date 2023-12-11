@@ -331,6 +331,18 @@ build_wrpc_wasm_bindgen_interface!(
 );
 
 #[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(typescript_type = "Address[] | string[]")]
+    pub type AddressesInput;
+}
+
+#[wasm_bindgen(typescript_custom_section)]
+const TS_TYPES: &str = r#"
+export type AddressesInput = Address[] | string[];
+"#;
+
+
+#[wasm_bindgen]
 impl RpcClient {
     #[wasm_bindgen(js_name = submitTransaction)]
     pub async fn js_submit_transaction(&self, js_value: JsValue, allow_orphan: Option<bool>) -> Result<JsValue> {
@@ -353,11 +365,12 @@ impl RpcClient {
 
     /// This call accepts an `Array` of `Address` or an Array of address strings.
     #[wasm_bindgen(js_name = getUtxosByAddresses)]
-    pub async fn get_utxos_by_addresses(&self, request: JsValue) -> Result<JsValue> {
-        let request = if let Ok(addresses) = AddressList::try_from(&request) {
+    pub async fn get_utxos_by_addresses(&self, request: AddressesInput) -> Result<JsValue> {
+        let js_value:JsValue = request.into();
+        let request = if let Ok(addresses) = AddressList::try_from(&js_value) {
             GetUtxosByAddressesRequest { addresses: addresses.into() }
         } else {
-            from_value::<GetUtxosByAddressesRequest>(request)?
+            from_value::<GetUtxosByAddressesRequest>(js_value)?
         };
 
         let result: RpcResult<GetUtxosByAddressesResponse> = self.client.get_utxos_by_addresses_call(request).await;
