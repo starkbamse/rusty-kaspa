@@ -9,7 +9,7 @@ use kaspa_notify::notification::Notification as NotificationT;
 pub use kaspa_rpc_macros::{build_wrpc_wasm_bindgen_interface, build_wrpc_wasm_bindgen_subscriptions};
 pub use serde_wasm_bindgen::from_value;
 pub use workflow_wasm::serde::to_value;
-
+mod wasm_types;
 struct NotificationSink(Function);
 unsafe impl Send for NotificationSink {}
 impl From<NotificationSink> for Function {
@@ -330,16 +330,6 @@ build_wrpc_wasm_bindgen_interface!(
     ]
 );
 
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(typescript_type = "Address[] | string[]")]
-    pub type AddressesInput;
-}
-
-#[wasm_bindgen(typescript_custom_section)]
-const TS_TYPES: &str = r#"
-export type AddressesInput = Address[] | string[];
-"#;
 
 
 #[wasm_bindgen]
@@ -365,17 +355,21 @@ impl RpcClient {
 
     /// This call accepts an `Array` of `Address` or an Array of address strings.
     #[wasm_bindgen(js_name = getUtxosByAddresses)]
-    pub async fn get_utxos_by_addresses(&self, request: AddressesInput) -> Result<JsValue> {
-        let js_value:JsValue = request.into();
-        let request = if let Ok(addresses) = AddressList::try_from(&js_value) {
+    pub async fn get_utxos_by_addresses(&self, request: wasm_types::GetUtxosByAddressesRequest) -> Result<wasm_types::IGetUtxosByAddressesResponse> {
+        let request = if let Ok(addresses) = AddressList::try_from(JsValue::from(&request)) {
             GetUtxosByAddressesRequest { addresses: addresses.into() }
         } else {
-            from_value::<GetUtxosByAddressesRequest>(js_value)?
+            from_value::<GetUtxosByAddressesRequest>(JsValue::from(request))?
         };
-
         let result: RpcResult<GetUtxosByAddressesResponse> = self.client.get_utxos_by_addresses_call(request).await;
         let response: GetUtxosByAddressesResponse = result.map_err(|err| wasm_bindgen::JsError::new(&err.to_string()))?;
-        to_value(&response.entries).map_err(|err| err.into())
+
+        // Convert the entries to `JsValue` and handle any error by converting it to `wasm_bindgen::JsError`
+        let entries_value = to_value(&response.entries)
+            .map_err(|err| wasm_bindgen::JsError::from(err))?;
+    
+        let response = wasm_types::IGetUtxosByAddressesResponse::new(entries_value);
+        Ok(response)
     }
 
     #[wasm_bindgen(js_name = getUtxosByAddressesCall)]
