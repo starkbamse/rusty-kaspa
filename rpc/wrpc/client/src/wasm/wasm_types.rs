@@ -52,3 +52,9 @@ extern "C" {
     pub type IGetUtxosByAddressesResponse;
 
 }
+
+impl IGetUtxosByAddressesResponse {
+    pub fn new(value: JsValue) -> Self {
+        IGetUtxosByAddressesResponse { obj: value }
+    }
+}

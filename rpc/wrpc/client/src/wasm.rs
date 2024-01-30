@@ -368,7 +368,8 @@ impl RpcClient {
         let entries_value = to_value(&response.entries)
             .map_err(|err| wasm_bindgen::JsError::from(err))?;
     
-        Ok(wasm_bindgen::JsCast::unchecked_into::<wasm_types::IGetUtxosByAddressesResponse>(entries_value))
+        let response = wasm_types::IGetUtxosByAddressesResponse::new(entries_value);
+        Ok(response)
     }
 
     #[wasm_bindgen(js_name = getUtxosByAddressesCall)]
