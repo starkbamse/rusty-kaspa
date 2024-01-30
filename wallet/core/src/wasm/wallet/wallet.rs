@@ -9,6 +9,7 @@ use crate::wasm::wallet::account::Account;
 use crate::wasm::wallet::keydata::PrvKeyDataInfo;
 use kaspa_wrpc_client::wasm::RpcClient;
 use kaspa_wrpc_client::WrpcEncoding;
+use kaspa_wrpc_client::wasm_types::IConnectOptions;
 use runtime::AccountKind;
 use workflow_core::sendable::Sendable;
 use workflow_wasm::channel::EventDispatcher;
@@ -175,7 +176,7 @@ impl Wallet {
         Ok(())
     }
 
-    pub async fn connect(&self, args: JsValue) -> Result<()> {
+    pub async fn connect(&self, args: IConnectOptions) -> Result<()> {
         self.rpc.connect(args).await?;
         Ok(())
     }

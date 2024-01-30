@@ -1,6 +1,8 @@
 use crate::error::Error;
 use crate::imports::*;
 use crate::result::Result;
+use crate::wasm_types::IConnectOptions;
+
 use js_sys::Array;
 use kaspa_addresses::{Address, AddressList};
 use kaspa_consensus_core::network::{wasm::Network, NetworkType};
@@ -65,8 +67,8 @@ impl RpcClient {
     /// Connect to the Kaspa RPC server. This function starts a background
     /// task that connects and reconnects to the server if the connection
     /// is terminated.  Use [`disconnect()`] to terminate the connection.
-    pub async fn connect(&self, args: JsValue) -> Result<()> {
-        let options: ConnectOptions = args.try_into()?;
+    pub async fn connect(&self, args: IConnectOptions) -> Result<()> {
+        let options: ConnectOptions = JsValue::from(args).try_into()?;
 
         self.start_notification_task()?;
         self.client.connect(options).await?;
