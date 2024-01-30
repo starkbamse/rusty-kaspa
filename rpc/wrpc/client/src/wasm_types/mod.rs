@@ -1,7 +1,7 @@
 use crate::imports::*;
 
 #[wasm_bindgen(typescript_custom_section)]
-const IConnectOptions:&'static str= r#"
+const IConnectOptions: &'static str = r#"
 
 /**
  * Each Duration is composed of a whole number of seconds and a 
@@ -39,6 +39,6 @@ export interface IConnectOptions {
 
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(typescript_type="IConnectOptions | undefined")]
+    #[wasm_bindgen(typescript_type = "IConnectOptions | undefined")]
     pub type IConnectOptions;
 }
