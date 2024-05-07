@@ -290,7 +290,7 @@ impl RpcClient {
 
         let client = Arc::new(
             KaspaRpcClient::new(encoding, url.as_deref(), resolver.clone().map(Into::into), network_id, None)
-                .unwrap_or_else(|err| panic!("{err}")),
+                .unwrap(),
         );
 
         let rpc_client = RpcClient {
