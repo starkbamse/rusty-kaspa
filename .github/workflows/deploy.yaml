@@ -4,20 +4,10 @@ on:
     types: [ published ]
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        # Build gnu-linux on ubuntu-18.04 and musl on ubuntu latest
-        # os: [ ubuntu-18.04, ubuntu-latest, windows-latest, macos-latest ]
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
-    name: Building, ${{ matrix.os }}
+  build-linux:
+    runs-on: ubuntu-latest
+    name: Build Linux
     steps:
-      - name: Fix CRLF on Windows
-        if: runner.os == 'Windows'
-        run: git config --global core.autocrlf false
-
       - name: Checkout sources
         uses: actions/checkout@v4
 
@@ -70,6 +60,50 @@ jobs:
           zip -r "${archive}" ./bin/*
           echo "archive=${archive}" >> $GITHUB_ENV
           echo "asset_name=${asset_name}" >> $GITHUB_ENV
+  build-window-mac:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Build gnu-linux on ubuntu-18.04 and musl on ubuntu latest
+        # os: [ ubuntu-18.04, ubuntu-latest, windows-latest, macos-latest ]
+        os: [ windows-latest, macos-latest ]
+    name: Building, ${{ matrix.os }}
+    steps:
+      - name: Fix CRLF on Windows
+        if: runner.os == 'Windows'
+        run: git config --global core.autocrlf false
+
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo Build Outputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache Toolchain
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/x-tools
+          key: ${{ runner.os }}-musl-${{ hashFiles('**/musl-toolchain/preset.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-musl-
 
       - name: Build on Windows
         if: runner.os == 'Windows'
