@@ -40,7 +40,8 @@ js-sys.workspace = true
 wasm-bindgen-futures.workspace = true
 workflow-core.workspace = true
 futures.workspace = true
-ring = { version = "0.17", features = ["wasm32_unknown_unknown_js"] }
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+ring = "0.17"
 
 [lints]
 workspace = true
